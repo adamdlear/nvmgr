@@ -2,6 +2,16 @@
 
 A simple manager for your neovim configurations
 
+## Installation
+
+Prerequisites:
+
+- go
+
+```sh
+go install github.com/adamdlear/nvmgr@latest
+```
+
 ## Commands
 
 - create: Create a new config
