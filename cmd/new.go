@@ -1,3 +1,6 @@
+/*
+Copyright © 2025 Adam Lear
+*/
 package cmd
 
 import (
@@ -15,24 +18,31 @@ var (
 	desc string
 )
 
-var createCmd = &cobra.Command{
-	Use:   "create [name]",
-	Short: "Create a new Neovim config (optionally from another)",
+// newCmd represents the new command
+var newCmd = &cobra.Command{
+	Use:   "new [name]",
 	Args:  cobra.ExactArgs(1),
+	Short: "Create a new Neovim config (optionally from another)",
+	Example: `# Create a blank config
+nvmgr new my-config
+
+# Clone an existing config
+nvmgr new my-config --from main --desc "Experimenting with LSP"`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
-		configDir := configs.ConfigDir()
-		newPath := filepath.Join(configDir, configs.ConfigPrefix+name)
+
+		newPath := filepath.Join(configs.ConfigDir(), configs.ConfigPrefix+name)
 
 		if _, err := os.Stat(newPath); err == nil {
 			return fmt.Errorf("config %q already exists", name)
 		}
 
 		if from != "" {
-			fromPath := filepath.Join(configDir, configs.ConfigPrefix+from)
+			fromPath := filepath.Join(configs.ConfigDir(), configs.ConfigPrefix+name)
 			if _, err := os.Stat(fromPath); os.IsNotExist(err) {
 				return fmt.Errorf("source config %q not found", from)
 			}
+
 			if err := copyDir(fromPath, newPath); err != nil {
 				return err
 			}
@@ -52,12 +62,12 @@ var createCmd = &cobra.Command{
 }
 
 func init() {
-	createCmd.Flags().StringVarP(&from, "from", "f", "", "clone from an existing config")
-	createCmd.Flags().StringVarP(&desc, "desc", "d", "", "add a short description")
-	rootCmd.AddCommand(createCmd)
+	newCmd.Flags().StringVarP(&from, "from", "f", "", "clone from an existing config")
+	newCmd.Flags().StringVarP(&desc, "desc", "d", "", "add a short description")
+	rootCmd.AddCommand(newCmd)
 }
 
-func copyDir(src, dest string) error {
+func copyDir(src string, dest string) error {
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -74,6 +84,7 @@ func copyDir(src, dest string) error {
 		if err != nil {
 			return err
 		}
+
 		return os.WriteFile(target, data, info.Mode())
 	})
 }
