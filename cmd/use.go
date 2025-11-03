@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	configs "github.com/adamdlear/nvmgr/internal/configs"
+	"github.com/adamdlear/nvmgr/internal/configs"
+	"github.com/adamdlear/nvmgr/internal/symlink"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +19,7 @@ var useCmd = &cobra.Command{
 			return fmt.Errorf("config %q does not exist", name)
 		}
 
-		if err := configs.Activate(name); err != nil {
+		if err := symlink.Activate(name); err != nil {
 			return err
 		}
 

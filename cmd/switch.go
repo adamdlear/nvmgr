@@ -9,6 +9,7 @@ import (
 
 	metadata "github.com/adamdlear/nvmgr/internal"
 	"github.com/adamdlear/nvmgr/internal/configs"
+	"github.com/adamdlear/nvmgr/internal/symlink"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +45,7 @@ var switchCmd = &cobra.Command{
 			return fmt.Errorf("no Neovim configs found")
 		}
 
-		active, _ := configs.ActiveName()
+		active, _ := symlink.ActiveName()
 
 		fmt.Println("Available configurations:")
 		for i, name := range configNames {
@@ -67,7 +68,7 @@ var switchCmd = &cobra.Command{
 		}
 
 		name := configNames[choice-1]
-		if err := configs.Activate(name); err != nil {
+		if err := symlink.Activate(name); err != nil {
 			return err
 		}
 
