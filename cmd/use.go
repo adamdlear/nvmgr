@@ -13,6 +13,19 @@ var useCmd = &cobra.Command{
 	Use:   "use [name]",
 	Short: "Set the active Neovim configuration",
 	Args:  cobra.ExactArgs(1),
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		names := configs.List()
+		var matches []string
+		for _, n := range names {
+			noPref := strings.TrimPrefix(n, configs.ConfigPrefix)
+			fmt.Println(noPref)
+			if strings.HasPrefix(noPref, toComplete) {
+				matches = append(matches, n)
+				fmt.Println(n)
+			}
+		}
+		return matches, cobra.ShellCompDirectiveNoFileComp
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 		if !configs.Exists(name) {
