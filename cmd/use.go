@@ -18,7 +18,6 @@ var useCmd = &cobra.Command{
 		var matches []string
 		for _, n := range names {
 			noPref := strings.TrimPrefix(n, configs.ConfigPrefix)
-			fmt.Println(noPref)
 			if strings.HasPrefix(noPref, toComplete) {
 				matches = append(matches, n)
 				fmt.Println(n)
