@@ -14,7 +14,7 @@ import (
 )
 
 var installCmd = &cobra.Command{
-	Use:   "install",
+	Use:   "install <git-url> [name]",
 	Args:  cobra.RangeArgs(1, 2),
 	Short: "Install an existing config from a git url",
 	Example: `

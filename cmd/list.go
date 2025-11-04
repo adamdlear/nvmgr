@@ -16,8 +16,7 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List available Neovim configurations with metadata",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		configDir := filepath.Join(os.Getenv("HOME"), ".config")
-		entries, err := os.ReadDir(configDir)
+		entries, err := os.ReadDir(configs.ConfigDir())
 		if err != nil {
 			return fmt.Errorf("failed to read config dir: %w", err)
 		}
@@ -29,7 +28,7 @@ var listCmd = &cobra.Command{
 			if !e.IsDir() || !strings.HasPrefix(e.Name(), configs.ConfigPrefix) {
 				continue
 			}
-			dirPath := filepath.Join(configDir, e.Name())
+			dirPath := filepath.Join(configs.ConfigDir(), e.Name())
 			meta, err := metadata.Read(dirPath)
 			if err != nil {
 				// fallback if no metadata file exists
