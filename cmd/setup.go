@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	metadata "github.com/adamdlear/nvmgr/internal"
 	"github.com/adamdlear/nvmgr/internal/configs"
@@ -21,6 +22,7 @@ var setupCmd = &cobra.Command{
 		fmt.Println("Enter a name for your existing Neovim config (ex: main, work, backup...): ")
 		reader := bufio.NewReader(os.Stdin)
 		name, _ := reader.ReadString('\n')
+		name = strings.TrimPrefix(name, "\n")
 
 		existingPath := configs.ConfigPath("nvim")
 		newPath := configs.ConfigPath(configs.ConfigPrefix + name)

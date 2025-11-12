@@ -10,6 +10,7 @@ import (
 
 	metadata "github.com/adamdlear/nvmgr/internal"
 	"github.com/adamdlear/nvmgr/internal/configs"
+	"github.com/adamdlear/nvmgr/internal/files"
 	"github.com/spf13/cobra"
 )
 
@@ -43,7 +44,7 @@ nvmgr new my-config --from main --desc "Experimenting with LSP"`,
 				return fmt.Errorf("source config %q not found", from)
 			}
 
-			if err := copyDir(fromPath, newPath); err != nil {
+			if err := files.CopyDir(fromPath, newPath); err != nil {
 				return err
 			}
 		} else {
@@ -65,26 +66,4 @@ func init() {
 	newCmd.Flags().StringVarP(&from, "from", "f", "", "clone from an existing config")
 	newCmd.Flags().StringVarP(&desc, "desc", "d", "", "add a short description")
 	rootCmd.AddCommand(newCmd)
-}
-
-func copyDir(src string, dest string) error {
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		rel, _ := filepath.Rel(src, path)
-		target := filepath.Join(dest, rel)
-
-		if info.IsDir() {
-			return os.MkdirAll(target, info.Mode())
-		}
-
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-
-		return os.WriteFile(target, data, info.Mode())
-	})
 }

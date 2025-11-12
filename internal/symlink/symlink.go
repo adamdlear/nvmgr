@@ -36,3 +36,22 @@ func ActiveName() (string, error) {
 	}
 	return filepath.Base(target), nil
 }
+
+// Atomically update the symlink
+func Update(old string, new string) error {
+	newTmp := new + ".tmp"
+
+	if err := os.Remove(newTmp); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	if err := os.Symlink(old, newTmp); err != nil {
+		return err
+	}
+
+	if err := os.Rename(newTmp, new); err != nil {
+		return err
+	}
+
+	return nil
+}
