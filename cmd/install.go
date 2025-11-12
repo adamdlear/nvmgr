@@ -13,22 +13,39 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var distributions = map[string]string{
+	"astronvim": "https://github.com/AstroNvim/AstroNvim",
+	"kickstart": "https://github.com/nvim-lua/kickstart.nvim.git",
+	"lazyvim":   "https://github.com/LazyVim/starter",
+	"nvchad":    "https://github.com/NvChad/starter",
+}
+
 var installCmd = &cobra.Command{
-	Use:   "install <git-url> [name]",
+	Use:   "install <distribution-name | git-url> [name]",
 	Args:  cobra.RangeArgs(1, 2),
-	Short: "Install an existing config from a git url",
+	Short: "Install a config from a git url or a recognized distribution",
 	Example: `
-# Install AstroNvim
+# Install a config from a recognized distribution
+nvmgr install lazyvim
+
+# Install a config from a git url and give it a name
 nvmgr install https://github.com/AstroNvim/AstroNvim astro`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		url := args[0]
-		var name string
+		source := args[0]
+		url := source
 
-		if len(args) == 1 {
+		if repoURL, ok := distributions[source]; ok {
+			url = repoURL
+		}
+
+		var name string
+		if len(args) == 2 {
+			name = args[1]
+		} else if _, ok := distributions[source]; ok {
+			name = source
+		} else {
 			parts := strings.Split(url, "/")
 			name = parts[len(parts)-1]
-		} else {
-			name = args[1]
 		}
 
 		fmt.Printf("Installing %q from %s\n", name, url)
