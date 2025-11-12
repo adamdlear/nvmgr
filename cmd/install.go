@@ -64,5 +64,13 @@ nvmgr install https://github.com/AstroNvim/AstroNvim astro`,
 }
 
 func init() {
+	var longDesc strings.Builder
+	longDesc.WriteString("Install a config from a git url or a recognized distribution.\n\n")
+	longDesc.WriteString("Recognized distributions:\n")
+	for name := range distributions {
+		longDesc.WriteString(fmt.Sprintf("  - %s\n", name))
+	}
+	installCmd.Long = longDesc.String()
+
 	rootCmd.AddCommand(installCmd)
 }
