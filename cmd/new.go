@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
-	metadata "github.com/adamdlear/nvmgr/internal"
 	"github.com/adamdlear/nvmgr/internal/configs"
 	"github.com/adamdlear/nvmgr/internal/files"
 	"github.com/spf13/cobra"
@@ -53,8 +53,13 @@ nvmgr new my-config --from main --desc "Experimenting with LSP"`,
 			}
 		}
 
-		if err := metadata.Write(newPath, name, desc); err != nil {
-			return fmt.Errorf("failed to write metadata: %w", err)
+		config := configs.Config{
+			Name:      name,
+			Path:      newPath,
+			CreatedAt: time.Now(),
+		}
+		if err := configs.AddConfig(config); err != nil {
+			return fmt.Errorf("failed to save config: %w", err)
 		}
 
 		fmt.Printf("Created new config: %s (%s)\n", name, newPath)
