@@ -14,7 +14,7 @@ var useCmd = &cobra.Command{
 	Short: "Set the active Neovim configuration",
 	Args:  cobra.ExactArgs(1),
 	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		names := configs.List()
+		names, _ := configs.List()
 		var matches []string
 		for _, n := range names {
 			noPref := strings.TrimPrefix(n, configs.ConfigPrefix)

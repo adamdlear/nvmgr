@@ -14,7 +14,10 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List available Neovim configurations with metadata",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		names := configs.List()
+		names, err := configs.List()
+		if err != nil {
+			return err
+		}
 
 		fmt.Printf("%-15s %-45s %-25s %s\n", "NAME", "PATH", "CREATED", "DESCRIPTION")
 		fmt.Println(strings.Repeat("-", 100))
