@@ -31,7 +31,7 @@ func ConfigPath(name string) string {
 	return filepath.Join(ConfigDir(), ConfigPrefix+name)
 }
 
-func nvmgrConfigsPath() string {
+func NvmgrConfigsPath() string {
 	return filepath.Join(ConfigDir(), "nvmgr", "configs.json")
 }
 
@@ -60,7 +60,7 @@ func List() ([]string, error) {
 
 // CreateConfigsFile creates the configs.json file.
 func CreateConfigsFile() (*os.File, error) {
-	path := nvmgrConfigsPath()
+	path := NvmgrConfigsPath()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func CreateConfigsFile() (*os.File, error) {
 // ReadConfigsFile reads the configs.json file and returns a list of configs.
 func ReadConfigs() ([]Config, error) {
 	var configs []Config
-	path := nvmgrConfigsPath()
+	path := NvmgrConfigsPath()
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return configs, err
@@ -88,7 +88,7 @@ func WriteConfigs(configs []Config) error {
 		return fmt.Errorf("failed to marshal configs: %w", err)
 	}
 
-	path := nvmgrConfigsPath()
+	path := NvmgrConfigsPath()
 
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)

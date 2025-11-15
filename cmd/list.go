@@ -2,45 +2,35 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
+	"os"
 	"time"
 
-	metadata "github.com/adamdlear/nvmgr/internal"
 	"github.com/adamdlear/nvmgr/internal/configs"
 	"github.com/spf13/cobra"
 )
 
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List available Neovim configurations with metadata",
+	Short: "List available Neovim configurations",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		names, err := configs.List()
+		configurations, err := configs.ReadConfigs()
 		if err != nil {
-			return err
+			if os.IsNotExist(err) {
+				fmt.Printf("Run %q to set up nvmgr", "nvmgr list")
+				return nil
+			}
+			return fmt.Errorf("failed to read %s", configs.NvmgrConfigsPath())
 		}
 
-		fmt.Printf("%-15s %-45s %-25s %s\n", "NAME", "PATH", "CREATED", "DESCRIPTION")
-		fmt.Println(strings.Repeat("-", 100))
+		if len(configurations) == 0 {
+			fmt.Println("No configurations found.")
+			return nil
+		}
 
-		for _, n := range names {
-			dirPath := configs.ConfigDir() + "/" + n
-			meta, err := metadata.Read(dirPath)
-			if err != nil {
-				// fallback if no metadata file exists
-				fmt.Printf("%-15s %-45s %-25s %s\n",
-					strings.TrimPrefix(n, configs.ConfigPrefix),
-					dirPath,
-					"unknown",
-					"",
-				)
-				continue
-			}
-			fmt.Printf("%-15s %-45s %-25s %s\n",
-				meta.Name,
-				dirPath,
-				meta.CreatedAt.Format(time.RFC822),
-				meta.Description,
-			)
+		for _, config := range configurations {
+			fmt.Printf("> %s\n", config.Name)
+			fmt.Printf("  Path: %s\n", config.Path)
+			fmt.Printf("  Created: %s\n\n", config.CreatedAt.Format(time.RFC822))
 		}
 		return nil
 	},
