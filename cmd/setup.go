@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adamdlear/nvmgr/internal/configs"
+	"github.com/adamdlear/nvmgr/internal/state"
 	"github.com/spf13/cobra"
 )
 
@@ -15,40 +15,49 @@ var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup nvmgr for your machine",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		entries, err := os.ReadDir(configs.ConfigDir())
+		configDir, err := state.GetConfigDir()
+		if err != nil {
+			return fmt.Errorf("failed to read from user's config directory: %w", err)
+		}
+
+		entries, err := os.ReadDir(configDir)
 		if err != nil {
 			return err
 		}
 
-		c := []configs.Config{}
+		current := ""
+		configs := []state.Config{}
 
 		for _, e := range entries {
 			if !strings.HasPrefix(e.Name(), "nvim") {
 				continue
 			}
 
-			active := false
 			name := strings.TrimPrefix(e.Name(), "nvim-")
 			if e.Name() == "nvim" {
 				name = "main"
-				active = true
+				current = "main"
 			}
-			path := filepath.Join(configs.ConfigDir(), e.Name())
+			path := filepath.Join(configDir, e.Name())
 			timestamp := time.Now()
 
-			config := configs.Config{
+			config := state.Config{
 				Name:      name,
 				Path:      path,
 				CreatedAt: timestamp,
-				Active:    active,
 			}
 
-			c = append(c, config)
+			configs = append(configs, config)
 
 			fmt.Printf("Saved config for %s\n", path)
 		}
 
-		err = configs.WriteConfigs(c)
+		s := state.State{
+			Current: current,
+			Configs: configs,
+		}
+
+		err = state.SaveState(&s)
 		if err != nil {
 			return err
 		}

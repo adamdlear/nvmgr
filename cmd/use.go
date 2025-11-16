@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/adamdlear/nvmgr/internal/configs"
-	"github.com/adamdlear/nvmgr/internal/symlink"
+	"github.com/adamdlear/nvmgr/internal/state"
 	"github.com/spf13/cobra"
 )
 
@@ -16,9 +13,9 @@ var useCmd = &cobra.Command{
 	Short: "Set the active Neovim configuration",
 	Args:  cobra.ExactArgs(1),
 	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		entries, _ := configs.ReadConfigs()
+		s, _ := state.LoadState()
 		var matches []string
-		for _, c := range entries {
+		for _, c := range s.Configs {
 			if strings.HasPrefix(c.Name, toComplete) {
 				matches = append(matches, c.Name)
 				fmt.Println(c.Name)
@@ -29,35 +26,24 @@ var useCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 
-		config, err := configs.GetConfig(name)
+		exists, err := state.ConfigExists(name)
 		if err != nil {
-			return fmt.Errorf("failed to find config %q", name)
+			return fmt.Errorf("failed to get config '%s': %w", name, err)
+		}
+		if !exists {
+			return fmt.Errorf("config '%s' does not exist", name)
 		}
 
-		if err = symlink.Activate(config.Path); err != nil {
-			return err
-		}
-
-		fmt.Printf("Now using Neovim config: %s\n", config.Name)
-
-		home, err := os.UserHomeDir()
+		s, err := state.LoadState()
 		if err != nil {
-			return fmt.Errorf("failed to get user home directory: %w", err)
+			return fmt.Errorf("failed to read current configs: %w", err)
 		}
 
-		dirsToClean := []string{
-			filepath.Join(home, ".local", "share", "nvim"),
-			filepath.Join(home, ".local", "state", "nvim"),
-			filepath.Join(home, ".cache", "nvim"),
-		}
+		s.Current = name
 
-		fmt.Println("Clearing Neovim data, state, and cache directories...")
-		for _, dir := range dirsToClean {
-			if err := os.RemoveAll(dir); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: failed to remove directory %s: %v\n", dir, err)
-			}
+		if err := state.SaveState(s); err != nil {
+			return fmt.Errorf("faild to activate config '%s': %w", name, err)
 		}
-		fmt.Println("Cleanup complete. Please reinstall plugins in Neovim.")
 
 		return nil
 	},
