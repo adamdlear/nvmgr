@@ -8,6 +8,7 @@ import (
 
 	"github.com/adamdlear/nvmgr/internal/configs"
 	"github.com/adamdlear/nvmgr/internal/files"
+	"github.com/adamdlear/nvmgr/internal/state"
 	"github.com/adamdlear/nvmgr/internal/symlink"
 	"github.com/spf13/cobra"
 )
@@ -22,7 +23,12 @@ This command does the following things:
 - moves the desired configuration to '~/.config/nvim'	
 - removes any remaining symlinks`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		nvimDir := configs.ConfigDir() + "/nvim"
+		configDir, err := state.GetConfigDir()
+		if err != nil {
+			return err
+		}
+
+		nvimDir := configDir + "/nvim"
 
 		reader := bufio.NewReader(os.Stdin)
 		confirmed, err := confirm("Are you sure you want to restore your Neovim configurations?", reader)

@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/adamdlear/nvmgr/internal/configs"
+	"github.com/adamdlear/nvmgr/internal/state"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +16,7 @@ var launchCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 
-		config, err := configs.GetConfig(name)
+		config, err := state.GetConfig(name)
 		if err != nil {
 			return fmt.Errorf("could not find config %q: %w", name, err)
 		}

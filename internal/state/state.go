@@ -2,6 +2,7 @@ package state
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -16,19 +17,6 @@ type Config struct {
 type State struct {
 	Current string   `json:"current"`
 	Configs []Config `json:"configs"`
-}
-
-func ConfigExists(name string) (bool, error) {
-	state, err := LoadState()
-	if err != nil {
-		return false, err
-	}
-	for _, c := range state.Configs {
-		if c.Name == name {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 func SaveState(state *State) error {
@@ -76,6 +64,49 @@ func LoadState() (*State, error) {
 	}
 
 	return &state, nil
+}
+
+func GetConfig(name string) (*Config, error) {
+	state, err := LoadState()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, c := range state.Configs {
+		if c.Name == name {
+			return &c, nil
+		}
+	}
+
+	return nil, fmt.Errorf("config '%s' does not exist", name)
+}
+
+func SaveConfig(config *Config) error {
+	state, err := LoadState()
+	if err != nil {
+		return err
+	}
+
+	state.Configs = append(state.Configs, *config)
+
+	if err := SaveState(state); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ConfigExists(name string) (bool, error) {
+	state, err := LoadState()
+	if err != nil {
+		return false, err
+	}
+	for _, c := range state.Configs {
+		if c.Name == name {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func GetConfigDir() (string, error) {

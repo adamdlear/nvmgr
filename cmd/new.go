@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/adamdlear/nvmgr/internal/configs"
 	"github.com/adamdlear/nvmgr/internal/files"
+	"github.com/adamdlear/nvmgr/internal/state"
 	"github.com/spf13/cobra"
 )
 
@@ -26,14 +26,20 @@ nvmgr new my-config --from main`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 
-		newPath := filepath.Join(configs.ConfigDir(), configs.ConfigPrefix+name)
+		configPrefix := "nvim-"
+		configDir, err := state.GetConfigDir()
+		if err != nil {
+			return err
+		}
+
+		newPath := filepath.Join(configDir, configPrefix+name)
 
 		if _, err := os.Stat(newPath); err == nil {
 			return fmt.Errorf("config %q already exists", name)
 		}
 
 		if from != "" {
-			fromPath := filepath.Join(configs.ConfigDir(), configs.ConfigPrefix+name)
+			fromPath := filepath.Join(configDir, configPrefix+name)
 			if _, err := os.Stat(fromPath); os.IsNotExist(err) {
 				return fmt.Errorf("source config %q not found", from)
 			}
@@ -47,12 +53,12 @@ nvmgr new my-config --from main`,
 			}
 		}
 
-		config := configs.Config{
+		config := &state.Config{
 			Name:      name,
 			Path:      newPath,
 			CreatedAt: time.Now(),
 		}
-		if err := configs.AddConfig(config); err != nil {
+		if err := state.SaveConfig(config); err != nil {
 			return fmt.Errorf("failed to save config: %w", err)
 		}
 
