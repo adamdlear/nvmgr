@@ -37,12 +37,6 @@ func NvmgrConfigsPath() string {
 	return filepath.Join(ConfigDir(), "nvmgr", "configs.json")
 }
 
-// Exists returns true if a configuration with the given name exists.
-func Exists(name string) bool {
-	_, err := os.Stat(ConfigPath(name))
-	return err == nil
-}
-
 // ReadConfigs reads the configs.json file and returns a list of configs.
 func ReadConfigs() ([]Config, error) {
 	var configs []Config

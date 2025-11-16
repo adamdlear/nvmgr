@@ -16,13 +16,13 @@ var launchCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 
-		exists := configs.Exists(name)
-		if !exists {
-			return fmt.Errorf("config %q does not exist", name)
+		config, err := configs.GetConfig(name)
+		if err != nil {
+			return fmt.Errorf("could not find config %q: %w", name, err)
 		}
 
 		env := os.Environ()
-		env = append(env, fmt.Sprintf("NVIM_APPNAME=%s", configs.ConfigPrefix+name))
+		env = append(env, fmt.Sprintf("NVIM_APPNAME=%s", config.Path))
 
 		nvim := exec.Command("nvim")
 		nvim.Env = env
