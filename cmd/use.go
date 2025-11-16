@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/adamdlear/nvmgr/internal/configs"
@@ -32,11 +34,31 @@ var useCmd = &cobra.Command{
 			return fmt.Errorf("failed to find config %q", name)
 		}
 
-		if err := symlink.Activate(config.Path); err != nil {
+		if err = symlink.Activate(config.Path); err != nil {
 			return err
 		}
 
 		fmt.Printf("Now using Neovim config: %s\n", config.Name)
+
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return fmt.Errorf("failed to get user home directory: %w", err)
+		}
+
+		dirsToClean := []string{
+			filepath.Join(home, ".local", "share", "nvim"),
+			filepath.Join(home, ".local", "state", "nvim"),
+			filepath.Join(home, ".cache", "nvim"),
+		}
+
+		fmt.Println("Clearing Neovim data, state, and cache directories...")
+		for _, dir := range dirsToClean {
+			if err := os.RemoveAll(dir); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to remove directory %s: %v\n", dir, err)
+			}
+		}
+		fmt.Println("Cleanup complete. Please reinstall plugins in Neovim.")
+
 		return nil
 	},
 }
