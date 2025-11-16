@@ -14,10 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	from string
-	desc string
-)
+var from string
 
 // newCmd represents the new command
 var newCmd = &cobra.Command{
@@ -28,7 +25,7 @@ var newCmd = &cobra.Command{
 nvmgr new my-config
 
 # Clone an existing config
-nvmgr new my-config --from main --desc "Experimenting with LSP"`,
+nvmgr new my-config --from main`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 
@@ -69,6 +66,5 @@ nvmgr new my-config --from main --desc "Experimenting with LSP"`,
 
 func init() {
 	newCmd.Flags().StringVarP(&from, "from", "f", "", "clone from an existing config")
-	newCmd.Flags().StringVarP(&desc, "desc", "d", "", "add a short description")
 	rootCmd.AddCommand(newCmd)
 }
