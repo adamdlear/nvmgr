@@ -12,14 +12,11 @@ func ActiveLink() string {
 	return filepath.Join(configs.ConfigDir(), "nvim")
 }
 
-func Activate(name string) error {
-	target := configs.ConfigPath(name)
-	if _, err := os.Stat(target); os.IsNotExist(err) {
-		return fmt.Errorf("config %q does not exist", name)
-	}
-
+func Activate(target string) error {
 	link := ActiveLink()
-	_ = os.Remove(link)
+	if err := os.RemoveAll(link); err != nil {
+		return fmt.Errorf("failed to remove existing config: %w", err)
+	}
 
 	if err := os.Symlink(target, link); err != nil {
 		return fmt.Errorf("failed to create symlink: %w", err)

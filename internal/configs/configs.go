@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -39,32 +38,6 @@ func NvmgrConfigsPath() string {
 func Exists(name string) bool {
 	_, err := os.Stat(ConfigPath(name))
 	return err == nil
-}
-
-// List returns a list of all nvim configurations managed by nvmgr.
-func List() ([]string, error) {
-	entries, err := os.ReadDir(ConfigDir())
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config directory: %w", err)
-	}
-
-	var configs []string
-	for _, e := range entries {
-		if e.IsDir() && strings.HasPrefix(e.Name(), ConfigPrefix) {
-			configs = append(configs, strings.TrimPrefix(e.Name(), ConfigPrefix))
-		}
-	}
-
-	return configs, nil
-}
-
-// CreateConfigsFile creates the configs.json file.
-func CreateConfigsFile() (*os.File, error) {
-	path := NvmgrConfigsPath()
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return nil, err
-	}
-	return os.Create(path)
 }
 
 // ReadConfigsFile reads the configs.json file and returns a list of configs.
