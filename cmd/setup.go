@@ -1,6 +1,3 @@
-/*
-Copyright © 2025 Adam Lear
-*/
 package cmd
 
 import (
@@ -30,9 +27,11 @@ var setupCmd = &cobra.Command{
 				continue
 			}
 
+			active := false
 			name := strings.TrimPrefix(e.Name(), "nvim-")
 			if e.Name() == "nvim" {
 				name = "main"
+				active = true
 			}
 			path := filepath.Join(configs.ConfigDir(), e.Name())
 			timestamp := time.Now()
@@ -41,6 +40,7 @@ var setupCmd = &cobra.Command{
 				Name:      name,
 				Path:      path,
 				CreatedAt: timestamp,
+				Active:    active,
 			}
 
 			c = append(c, config)

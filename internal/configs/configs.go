@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/adamdlear/nvmgr/internal/symlink"
 )
 
 // Config represents a single nvim configuration managed by nvmgr.
@@ -13,6 +15,7 @@ type Config struct {
 	Name      string    `json:"name"`
 	Path      string    `json:"path"`
 	CreatedAt time.Time `json:"created_at"`
+	Active    bool      `json:"active"`
 }
 
 const (
@@ -40,7 +43,7 @@ func Exists(name string) bool {
 	return err == nil
 }
 
-// ReadConfigsFile reads the configs.json file and returns a list of configs.
+// ReadConfigs reads the configs.json file and returns a list of configs.
 func ReadConfigs() ([]Config, error) {
 	var configs []Config
 	path := NvmgrConfigsPath()
@@ -100,5 +103,34 @@ func AddConfig(config Config) error {
 	if err = WriteConfigs(configs); err != nil {
 		return err
 	}
+	return nil
+}
+
+// Activate marks the marks the current config as deactive and sets the selected config as active
+func Activate(name string) error {
+	configs, err := ReadConfigs()
+	if err != nil {
+		return err
+	}
+
+	active, err := symlink.ActiveLink()
+	if err != nil {
+		return err
+	}
+
+	for _, c := range configs {
+		if c.Path == active {
+			c.Active = false
+		}
+		if c.Name == name {
+			c.Active = true
+			symlink.Activate(c.Path)
+		}
+	}
+
+	if err = WriteConfigs(configs); err != nil {
+		return err
+	}
+
 	return nil
 }

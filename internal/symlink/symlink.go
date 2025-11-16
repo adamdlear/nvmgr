@@ -4,16 +4,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/adamdlear/nvmgr/internal/configs"
 )
 
-func ActiveLink() string {
-	return filepath.Join(configs.ConfigDir(), "nvim")
+func ActiveLink() (string, error) {
+	return os.Readlink("nvim")
 }
 
 func Activate(target string) error {
-	link := ActiveLink()
+	link, err := ActiveLink()
+	if err != nil {
+		return err
+	}
+
 	if err := os.RemoveAll(link); err != nil {
 		return fmt.Errorf("failed to remove existing config: %w", err)
 	}
@@ -26,7 +28,11 @@ func Activate(target string) error {
 }
 
 func ActiveName() (string, error) {
-	link := ActiveLink()
+	link, err := ActiveLink()
+	if err != nil {
+		return "", err
+	}
+
 	target, err := os.Readlink(link)
 	if err != nil {
 		return "", fmt.Errorf("no active config (symlink missing or broken)")
@@ -34,7 +40,7 @@ func ActiveName() (string, error) {
 	return filepath.Base(target), nil
 }
 
-// Atomically update the symlink
+// Update atomically updates the symlink
 func Update(old string, new string) error {
 	newTmp := new + ".tmp"
 

@@ -30,7 +30,12 @@ var listCmd = &cobra.Command{
 		for _, config := range configurations {
 			fmt.Printf("> %s\n", config.Name)
 			fmt.Printf("  Path: %s\n", config.Path)
-			fmt.Printf("  Created: %s\n\n", config.CreatedAt.Format(time.RFC822))
+			fmt.Printf("  Created: %s\n", config.CreatedAt.Format(time.RFC822))
+			if config.Active {
+				fmt.Print("  Active\n\n")
+			} else {
+				fmt.Print("\n")
+			}
 		}
 		return nil
 	},
