@@ -16,7 +16,7 @@ func ExecuteNvim(args []string) error {
 		return err
 	}
 
-	state, err := state.LoadState()
+	s, err := state.LoadState()
 	if err != nil {
 		return err
 	}
@@ -26,8 +26,15 @@ func ExecuteNvim(args []string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	if state.Current != "" {
-		cmd.Env = append(os.Environ(), fmt.Sprintf("NVIM_APPNAME=%s", state.Current))
+	if s.Current != "" {
+		config, err := s.GetConfig(s.Current)
+		if err != nil {
+			// If the current config isn't found, fall back to default nvim
+			cmd.Env = os.Environ()
+		} else {
+			appName := filepath.Base(config.Path)
+			cmd.Env = append(os.Environ(), fmt.Sprintf("NVIM_APPNAME=%s", appName))
+		}
 	} else {
 		cmd.Env = os.Environ()
 	}
@@ -36,7 +43,6 @@ func ExecuteNvim(args []string) error {
 }
 
 func findRealNvim() (string, error) {
-	// Get the current executable path
 	currentExe, err := os.Executable()
 	if err != nil {
 		return "", err
@@ -46,34 +52,28 @@ func findRealNvim() (string, error) {
 		return "", err
 	}
 
-	// Get PATH
 	pathEnv := os.Getenv("PATH")
-	paths := strings.SplitSeq(pathEnv, ":")
+	paths := strings.Split(pathEnv, ":")
 
-	// Search for nvim in PATH, excluding our wrapper
-	for dir := range paths {
+	for _, dir := range paths {
 		nvimPath := filepath.Join(dir, "nvim")
 
-		// Skip if it doesn't exist
 		if _, err := os.Stat(nvimPath); os.IsNotExist(err) {
 			continue
 		}
 
-		// Resolve symlinks
 		realPath, err := filepath.EvalSymlinks(nvimPath)
 		if err != nil {
 			continue
 		}
 
-		// Skip if it's our wrapper
 		if realPath == currentExe {
 			continue
 		}
 
-		// Check if it's actually executable
 		if info, err := os.Stat(realPath); err == nil {
 			if info.Mode()&0o111 != 0 {
-				return nvimPath, nil
+				return realPath, nil
 			}
 		}
 	}
@@ -86,6 +86,7 @@ func findRealNvim() (string, error) {
 		"/opt/local/bin/nvim",
 	}
 
+	// Check fallback paths
 	for _, path := range commonPaths {
 		realPath, err := filepath.EvalSymlinks(path)
 		if err != nil {

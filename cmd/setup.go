@@ -54,12 +54,12 @@ var setupCmd = &cobra.Command{
 			fmt.Printf("Saved config for %s\n", path)
 		}
 
-		s := state.State{
+		s := &state.State{
 			Current: current,
 			Configs: configs,
 		}
 
-		err = state.SaveState(&s)
+		err = state.SaveState(s)
 		if err != nil {
 			return err
 		}
@@ -68,21 +68,21 @@ var setupCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		fmt.Printf("execPath: %s\n", execPath)
 		execPath, err = filepath.EvalSymlinks(execPath)
 		if err != nil {
 			return err
 		}
+		fmt.Printf("execPath: %s\n", execPath)
 
-		installDir := "/usr/local/bin"
-		if !isWritable(installDir) {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return err
-			}
-			installDir = filepath.Join(home, ".local", "bin")
-			if err := os.MkdirAll(installDir, 0o755); err != nil {
-				return err
-			}
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+		installDir := filepath.Join(home, ".local", "bin")
+
+		if err := os.MkdirAll(installDir, 0o755); err != nil {
+			return err
 		}
 
 		nvmgrPath := filepath.Join(installDir, "nvmgr")
@@ -91,30 +91,16 @@ var setupCmd = &cobra.Command{
 		fmt.Println("Setting up nvmgr...")
 
 		// Copy nvmgr to installation directory if not already there
-		if execPath != nvmgrPath {
-			if err := files.CopyFile(execPath, nvmgrPath); err != nil {
-				return fmt.Errorf("failed to install nvmgr: %w", err)
-			}
-			if err := os.Chmod(nvmgrPath, 0o755); err != nil {
-				return err
-			}
-			fmt.Printf("✓ Installed nvmgr to %s\n", nvmgrPath)
+		if err := files.CopyFile(execPath, nvmgrPath); err != nil {
+			return fmt.Errorf("failed to install nvmgr: %w", err)
 		}
-
-		// Check if wrapper already exists and points to us
-		if info, err := os.Lstat(wrapperPath); err == nil {
-			if info.Mode()&os.ModeSymlink != 0 {
-				target, err := os.Readlink(wrapperPath)
-				if err == nil && target == nvmgrPath {
-					fmt.Printf("✓ Wrapper already installed at %s\n", wrapperPath)
-					return finishInit(installDir)
-				}
-			}
-			// Wrapper exists but is not our symlink
-			return fmt.Errorf("nvim already exists at %s and is not managed by nvmgr. Please remove it first or install nvmgr to a different location", wrapperPath)
+		if err := os.Chmod(nvmgrPath, 0o755); err != nil {
+			return err
 		}
+		fmt.Printf("✓ Installed nvmgr to %s\n", nvmgrPath)
 
-		// Create symlink for wrapper
+		// Create symlink for wrapper, removing old one if it exists
+		_ = os.Remove(wrapperPath) // Ignore error if it doesn't exist
 		if err := os.Symlink(nvmgrPath, wrapperPath); err != nil {
 			return fmt.Errorf("failed to create nvim wrapper: %w", err)
 		}
@@ -129,16 +115,6 @@ var setupCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(setupCmd)
-}
-
-func isWritable(path string) bool {
-	testFile := filepath.Join(path, ".nvmgr_write_test")
-	err := os.WriteFile(testFile, []byte("test"), 0o644)
-	if err == nil {
-		os.Remove(testFile)
-		return true
-	}
-	return false
 }
 
 func finishInit(installDir string) error {

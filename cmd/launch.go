@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/adamdlear/nvmgr/internal/state"
 	"github.com/spf13/cobra"
@@ -16,13 +17,18 @@ var launchCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 
-		config, err := state.GetConfig(name)
+		s, err := state.LoadState()
+		if err != nil {
+			return fmt.Errorf("failed to load state: %w", err)
+		}
+		config, err := s.GetConfig(name)
 		if err != nil {
 			return fmt.Errorf("could not find config %q: %w", name, err)
 		}
 
 		env := os.Environ()
-		env = append(env, fmt.Sprintf("NVIM_APPNAME=%s", config.Path))
+		appName := filepath.Base(config.Path)
+		env = append(env, fmt.Sprintf("NVIM_APPNAME=%s", appName))
 
 		nvim := exec.Command("nvim")
 		nvim.Env = env

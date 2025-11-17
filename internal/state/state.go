@@ -19,6 +19,20 @@ type State struct {
 	Configs []Config `json:"configs"`
 }
 
+func (s *State) GetConfig(name string) (*Config, error) {
+	for i, c := range s.Configs {
+		if c.Name == name {
+			return &s.Configs[i], nil
+		}
+	}
+	return nil, fmt.Errorf("config '%s' does not exist", name)
+}
+
+func (s *State) ConfigExists(name string) bool {
+	_, err := s.GetConfig(name)
+	return err == nil
+}
+
 func SaveState(state *State) error {
 	stateFile, err := getStateFile()
 	if err != nil {
@@ -66,21 +80,6 @@ func LoadState() (*State, error) {
 	return &state, nil
 }
 
-func GetConfig(name string) (*Config, error) {
-	state, err := LoadState()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, c := range state.Configs {
-		if c.Name == name {
-			return &c, nil
-		}
-	}
-
-	return nil, fmt.Errorf("config '%s' does not exist", name)
-}
-
 func SaveConfig(config *Config) error {
 	state, err := LoadState()
 	if err != nil {
@@ -94,19 +93,6 @@ func SaveConfig(config *Config) error {
 	}
 
 	return nil
-}
-
-func ConfigExists(name string) (bool, error) {
-	state, err := LoadState()
-	if err != nil {
-		return false, err
-	}
-	for _, c := range state.Configs {
-		if c.Name == name {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 func GetConfigDir() (string, error) {

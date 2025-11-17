@@ -26,17 +26,13 @@ var useCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 
-		exists, err := state.ConfigExists(name)
-		if err != nil {
-			return fmt.Errorf("failed to get config '%s': %w", name, err)
-		}
-		if !exists {
-			return fmt.Errorf("config '%s' does not exist", name)
-		}
-
 		s, err := state.LoadState()
 		if err != nil {
 			return fmt.Errorf("failed to read current configs: %w", err)
+		}
+
+		if !s.ConfigExists(name) {
+			return fmt.Errorf("config '%s' does not exist", name)
 		}
 
 		s.Current = name
@@ -44,6 +40,8 @@ var useCmd = &cobra.Command{
 		if err := state.SaveState(s); err != nil {
 			return fmt.Errorf("faild to activate config '%s': %w", name, err)
 		}
+
+		fmt.Printf("Switched to config '%s'\n", name)
 
 		return nil
 	},
