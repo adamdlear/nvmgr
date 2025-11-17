@@ -18,11 +18,20 @@ func CopyDir(src string, dest string) error {
 			return os.MkdirAll(target, info.Mode())
 		}
 
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-
-		return os.WriteFile(target, data, info.Mode())
+		return CopyFile(path, target)
 	})
+}
+
+func CopyFile(src, dst string) error {
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(dst, data, srcInfo.Mode())
 }
