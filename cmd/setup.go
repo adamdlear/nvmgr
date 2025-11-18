@@ -68,12 +68,10 @@ var setupCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		fmt.Printf("execPath: %s\n", execPath)
 		execPath, err = filepath.EvalSymlinks(execPath)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("execPath: %s\n", execPath)
 
 		home, err := os.UserHomeDir()
 		if err != nil {
@@ -97,16 +95,13 @@ var setupCmd = &cobra.Command{
 		if err := os.Chmod(nvmgrPath, 0o755); err != nil {
 			return err
 		}
-		fmt.Printf("✓ Installed nvmgr to %s\n", nvmgrPath)
 
 		// Create symlink for wrapper, removing old one if it exists
-		_ = os.Remove(wrapperPath) // Ignore error if it doesn't exist
+		_ = os.Remove(wrapperPath); // Ignore error if it doesn't exist
 		if err := os.Symlink(nvmgrPath, wrapperPath); err != nil {
 			return fmt.Errorf("failed to create nvim wrapper: %w", err)
 		}
-		fmt.Printf("✓ Installed nvim wrapper at %s\n", wrapperPath)
-
-		fmt.Println("Successfully setup nvmgr")
+		fmt.Printf("✓ nvmgr and nvim wrapper installed in %s\n", installDir)
 		fmt.Printf("View your saved configs with %q\n", "nvmgr list")
 
 		return finishInit(installDir)
@@ -126,14 +121,10 @@ func finishInit(installDir string) error {
 	fmt.Println("\n✓ nvmgr initialized successfully!")
 	fmt.Println("\nNext steps:")
 	fmt.Println("  1. Make sure", installDir, "is in your PATH")
-	fmt.Println("  2. Create a new config: nvmgr new myconfig")
-	fmt.Println("  3. Switch to it: nvmgr use myconfig")
-	fmt.Println("  4. Run nvim as usual!")
-	fmt.Println("\nNote: Each config will have its own:")
-	fmt.Println("  - Config directory: ~/.config/<name>")
-	fmt.Println("  - Data directory: ~/.local/share/<name> (plugins, lazy.nvim, etc.)")
-	fmt.Println("  - State directory: ~/.local/state/<name>")
-	fmt.Println("  - Cache directory: ~/.cache/<name>")
+	fmt.Println(`  2. To apply changes, open a new shell or run 'rehash' (zsh) or 'hash -r' (bash).`)
+	fmt.Println("  3. Create a new config: nvmgr new myconfig")
+	fmt.Println("  4. Switch to it: nvmgr use myconfig")
+	fmt.Println("  5. Run nvim as usual!")
 
 	return nil
 }
