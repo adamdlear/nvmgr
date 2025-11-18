@@ -4,12 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
-	"github.com/adamdlear/nvmgr/internal/configs"
-	"github.com/adamdlear/nvmgr/internal/files"
-	"github.com/adamdlear/nvmgr/internal/state"
-	"github.com/adamdlear/nvmgr/internal/symlink"
 	"github.com/spf13/cobra"
 )
 
@@ -23,13 +20,6 @@ This command does the following things:
 - moves the desired configuration to '~/.config/nvim'	
 - removes any remaining symlinks`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		configDir, err := state.GetConfigDir()
-		if err != nil {
-			return err
-		}
-
-		nvimDir := configDir + "/nvim"
-
 		reader := bufio.NewReader(os.Stdin)
 		confirmed, err := confirm("Are you sure you want to restore your Neovim configurations?", reader)
 		if err != nil {
@@ -41,39 +31,18 @@ This command does the following things:
 			return nil
 		}
 
-		if _, err = os.Stat(nvimDir); err != nil {
-			if os.IsNotExist(err) {
-				confirmed, err = confirm("Would you like to create the ~/.config/nvim directory?", reader)
-				if err != nil {
-					return err
-				}
-
-				if !confirmed {
-					fmt.Println("The ~/.config/nvim directory needs to exist to continue. Exiting...")
-				}
-			}
-		}
-
-		fmt.Print("Which config would you like to be your main config? ")
-		name, err := reader.ReadString('\n')
+		home, err := os.UserHomeDir()
 		if err != nil {
-			return fmt.Errorf("error reading user input")
+			return err
 		}
-		name = strings.TrimPrefix(name, "\n")
-		path := configs.ConfigPath(name)
+		installDir := filepath.Join(home, ".local", "bin")
+		wrapperPath := filepath.Join(installDir, "nvim")
 
-		if err := replaceNvimPath(path, nvimDir); err != nil {
-			return err
+		if err := os.Remove(wrapperPath); err != nil {
+			return fmt.Errorf("failed to remove nvim binary at '%s'", wrapperPath)
 		}
-		if err := replaceNvimPath("~/.local/shared/nvim-"+name, "~/.local/shared/nvim"); err != nil {
-			return err
-		}
-		if err := replaceNvimPath("~/.local/state/nvim-"+name, "~/.local/state/nvim"); err != nil {
-			return err
-		}
-		if err := replaceNvimPath("~/.cache/nvim-"+name, "~/.cache/nvim"); err != nil {
-			return err
-		}
+
+		fmt.Println("Successfully cleaned up Neovim")
 
 		return nil
 	},
@@ -102,14 +71,4 @@ func confirm(question string, reader *bufio.Reader) (bool, error) {
 			fmt.Printf("Invalid option %q. Please enter Y or n.\n", response)
 		}
 	}
-}
-
-func replaceNvimPath(old string, new string) error {
-	if err := files.CopyDir(old, new); err != nil {
-		return fmt.Errorf("could not copy files from %q to %q, %w", old, new, err)
-	}
-	if err := symlink.Update(old, new); err != nil {
-		return fmt.Errorf("could not update link from %q to %q, %w", old, new, err)
-	}
-	return nil
 }
