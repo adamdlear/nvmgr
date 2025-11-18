@@ -17,6 +17,8 @@ var setupCmd = &cobra.Command{
 	Short: "Setup nvmgr and install the nvim wrapper",
 	Long:  `Set up nvmgr by installing the nvim wrapper binary that intercepts nvim calls.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("Setting up nvmgr...")
+
 		configDir, err := state.GetConfigDir()
 		if err != nil {
 			return fmt.Errorf("failed to read from user's config directory: %w", err)
@@ -86,8 +88,6 @@ var setupCmd = &cobra.Command{
 		nvmgrPath := filepath.Join(installDir, "nvmgr")
 		wrapperPath := filepath.Join(installDir, "nvim")
 
-		fmt.Println("Setting up nvmgr...")
-
 		// Copy nvmgr to installation directory if not already there
 		if err := files.CopyFile(execPath, nvmgrPath); err != nil {
 			return fmt.Errorf("failed to install nvmgr: %w", err)
@@ -97,12 +97,11 @@ var setupCmd = &cobra.Command{
 		}
 
 		// Create symlink for wrapper, removing old one if it exists
-		_ = os.Remove(wrapperPath); // Ignore error if it doesn't exist
+		_ = os.Remove(wrapperPath) // Ignore error if it doesn't exist
 		if err := os.Symlink(nvmgrPath, wrapperPath); err != nil {
 			return fmt.Errorf("failed to create nvim wrapper: %w", err)
 		}
-		fmt.Printf("✓ nvmgr and nvim wrapper installed in %s\n", installDir)
-		fmt.Printf("View your saved configs with %q\n", "nvmgr list")
+		fmt.Printf("nvmgr and nvim wrapper installed in %s\n", installDir)
 
 		return finishInit(installDir)
 	},
@@ -118,7 +117,7 @@ func finishInit(installDir string) error {
 		return err
 	}
 
-	fmt.Println("\n✓ nvmgr initialized successfully!")
+	fmt.Println("nvmgr initialized successfully!")
 	fmt.Println("\nNext steps:")
 	fmt.Println("  1. Make sure", installDir, "is in your PATH")
 	fmt.Println(`  2. To apply changes, open a new shell or run 'rehash' (zsh) or 'hash -r' (bash).`)
