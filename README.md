@@ -95,6 +95,20 @@ Restore your system to its state before `nvmgr`. This command removes the `nvim`
 nvmgr restore
 ```
 
+### `nvmgr remove <name>`
+
+Remove a Neovim configuration from being tracked by `nvmgr`.
+
+```sh
+nvmgr remove my-awesome-config
+```
+
+You can also remove the entire Neovim configuration directory with the `--delete` flag.
+
+```sh
+nvmgr remove my-awesome-config --delete
+```
+
 ## Issues
 
 If you run into any issues or have a feature request, please [create a GitHub issue](https://github.com/adamdlear/nvmgr/issues) and I'll look into it!
