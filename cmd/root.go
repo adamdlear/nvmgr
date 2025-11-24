@@ -10,8 +10,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "nvmgr",
-	Short: "A simple manager for your Neovim configs",
+	Use:     "nvmgr",
+	Short:   "A simple manager for your Neovim configs",
+	Version: "v0.2.1",
 }
 
 func Execute() {
